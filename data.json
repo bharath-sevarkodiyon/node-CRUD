@@ -1,0 +1,41 @@
+[
+  {
+    "id": 1,
+    "title": "Application",
+    "description": "can't able to install application",
+    "team": "Developer",
+    "status": "Pending",
+    "assignee": "Vinoth",
+    "reporter": "Bharath"
+  },
+  {
+    "id": 2,
+    "firstName": "Bharath",
+    "lastName": "S",
+    "emailId": "Bharath.Sevarkodiyon@gwcdata.ai",
+    "phoneNumber": "9080233170",
+    "employeeId": "0291706",
+    "designation": "Associate Full Stack Developer",
+    "teamId": "11213"
+  },
+  {
+    "id": 3,
+    "firstName": "Bharath",
+    "lastName": "S",
+    "emailId": "Bharath.Sevarkodiyon@gwcdata",
+    "phoneNumber": "9080233",
+    "employeeId": "02917068",
+    "designation": "Associate Full Stack Developer",
+    "teamId": "11213"
+  },
+  {
+    "id": 4,
+    "firstName": "Bharath12",
+    "lastName": "123",
+    "emailId": "Bharath@gwcdataa.i",
+    "phoneNumber": "1234567891",
+    "employeeId": "22917067",
+    "designation": "Associate Full Stack Developer",
+    "teamId": "112342"
+  }
+]

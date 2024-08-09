@@ -1,0 +1,44 @@
+[
+  {
+    "teamId": 1,
+    "teamName": "Dev",
+    "members": [
+      "Bharath",
+      "Santhosh",
+      "Ravi"
+    ]
+  },
+  {
+    "teamId": 2,
+    "teamName": "Software",
+    "members": [
+      "vinoth",
+      "ragav"
+    ]
+  },
+  {
+    "teamId": 3,
+    "teamName": "Sales",
+    "members": [
+      "sam",
+      "richad"
+    ]
+  },
+  {
+    "teamId": 4,
+    "teamName": "ABC",
+    "members": []
+  },
+  {
+    "teamId": 5,
+    "teamName": "A",
+    "members": []
+  },
+  {
+    "teamId": 6,
+    "teamName": "test4",
+    "members": [
+      "rty"
+    ]
+  }
+]

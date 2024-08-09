@@ -1,0 +1,56 @@
+[
+  {
+    "ticketId": 1,
+    "title": "application",
+    "description": "can't able to install application",
+    "team": "Developer",
+    "status": "Pending",
+    "assignee": "Vinoth",
+    "reporter": "Bharath"
+  },
+  {
+    "ticketId": 2,
+    "title": "software",
+    "description": "can't able to install application",
+    "team": "Developer",
+    "status": "Pending",
+    "assignee": "Vinoth",
+    "reporter": "Bharath"
+  },
+  {
+    "ticketId": 3,
+    "title": "system",
+    "description": "can't able to install application",
+    "team": "Developer",
+    "status": "Pending",
+    "assignee": "Vinoth",
+    "reporter": "Bharath"
+  },
+  {
+    "ticketId": 4,
+    "title": "appDB",
+    "description": "can't able to install application",
+    "team": "Developer",
+    "status": "open",
+    "assignee": "Vinoth",
+    "reporter": "Bharath"
+  },
+  {
+    "ticketId": 5,
+    "title": "applicion",
+    "description": "can't able to install application",
+    "team": "Developer",
+    "status": "tea",
+    "assignee": "test",
+    "reporter": "test"
+  },
+  {
+    "ticketId": 6,
+    "title": "applicions",
+    "description": "can't able to install application",
+    "team": "Developer",
+    "status": "teast",
+    "assignee": "test",
+    "reporter": "test"
+  }
+]
