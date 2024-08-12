@@ -3,26 +3,27 @@ const fs = require("node:fs");
 
 const ticketApi = express.Router();
 
-const ticketFileName = 'ticket.json';
+const dataFileName = 'data.json';
 
 // Read function
-const readTickets = () => {
-    if (!fs.existsSync(ticketFileName)) {
-        return [];
+const readData = () => {
+    if (!fs.existsSync(dataFileName)) {
+        return { teams: [], users: [], tickets: [] };
     }
-    const data = fs.readFileSync(ticketFileName, { encoding: 'utf-8' });
+    const data = fs.readFileSync(dataFileName, { encoding: 'utf-8' });
     return JSON.parse(data);
 };
 
 // Write function
-const writeTickets = (tickets) => {
-    fs.writeFileSync(ticketFileName, JSON.stringify(tickets, null, 2), { encoding: 'utf-8' });
+const writeData = (data) => {
+    fs.writeFileSync(dataFileName, JSON.stringify(data, null, 2), { encoding: 'utf-8' });
 };
 
 
 // GET
 ticketApi.get('/', (req, res) => {
-    let tickets = readTickets();
+    let data = readData();
+    let tickets = data.tickets;
 
     if (tickets.length === 0) {
         return res.status(404).json({
@@ -58,8 +59,21 @@ ticketApi.post('/', (req, res) => {
         });
     }
 
+    // Check for unexpected fields
+    const extraFields = Object.keys(req.body).filter(field => !requiredFields.includes(field));
+    if (extraFields.length > 0) {
+        return res.status(400).json({
+            "From": "ticketApi",
+            "Method": "POST",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${extraFields.join(', ')}`
+        });
+    }
+
     const { title, description, team, status, assignee, reporter } = req.body;
-    let tickets = readTickets();
+    let data = readData();
+    let tickets = data.tickets;
 
     // Validate ticket title to be unique
     const titleExists = tickets.some(ticket => ticket.title === title);
@@ -74,13 +88,24 @@ ticketApi.post('/', (req, res) => {
         });
     }
 
-    if ([title, description, team, status, assignee, reporter].some(field => field === null || field === '')) {
+    const isEmpty = (field) => !field || typeof field !== 'string' || field.trim() === '';
+
+    let validationErrors = [];
+
+    if (isEmpty(title)) validationErrors.push('title cannot be empty.');
+    if (isEmpty(description)) validationErrors.push('description cannot be empty.');
+    if (isEmpty(team)) validationErrors.push('team cannot be empty.');
+    if (isEmpty(status)) validationErrors.push('status cannot be empty.');
+    if (isEmpty(assignee)) validationErrors.push('assignee cannot be empty.');
+    if (isEmpty(reporter)) validationErrors.push('reporter cannot be empty.');
+
+    if (validationErrors.length > 0) {
         return res.status(400).json({
-            "From": "ticketApi",
+            "From": "userApi",
             "Method": "POST",
             "Status": "Data Not Created",
             "StatusCode": 400,
-            "Message": 'Fields cannot be null or empty.'
+            "Message": validationErrors.join(' ')
         });
     }
 
@@ -100,7 +125,7 @@ ticketApi.post('/', (req, res) => {
 
     // Add the new ticket to the array and write to the file
     tickets.push(newTicket);
-    writeTickets(tickets);
+    writeData(data);
 
     res.status(201).json({
         "From": "ticketApi",
@@ -127,9 +152,67 @@ ticketApi.put('/:ticketId', (req, res) => {
         });
     }
 
+    const requiredFields = ['title', 'description', 'team', 'status', 'assignee', 'reporter'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+
+    if (missingFields.length > 0) {
+        return res.status(400).json({
+            "From": "ticketApi",
+            "Method": "PUT",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Missing fields: ${missingFields.join(', ')}`
+        });
+    }
+
+    // Check for unexpected fields
+    const extraFields = Object.keys(req.body).filter(field => !requiredFields.includes(field));
+    if (extraFields.length > 0) {
+        return res.status(400).json({
+            "From": "ticketApi",
+            "Method": "PUT",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${extraFields.join(', ')}`
+        });
+    }
+
     ticketId = parseInt(ticketId);
     const { title, description, team, status, assignee, reporter } = req.body;
-    let tickets = readTickets();
+    let data = readData();
+    let tickets = data.tickets;
+
+    let ticket = tickets.find(ticket => ticket.ticketId === ticketId);
+    if (ticket === undefined) {
+        return res.status(404).json({
+            "From": "ticketApi",
+            "Method": "PUT",
+            "Status": "TicketId Not Found",
+            "StatusCode": 404
+        });
+    }
+
+    // Check for empty data
+    const isEmpty = (field) => !field || typeof field !== 'string' || field.trim() === '';
+
+    let validationErrors = [];
+
+    if (isEmpty(title)) validationErrors.push('title cannot be empty.');
+    if (isEmpty(description)) validationErrors.push('description cannot be empty.');
+    if (isEmpty(team)) validationErrors.push('team cannot be empty.');
+    if (isEmpty(status)) validationErrors.push('status cannot be empty.');
+    if (isEmpty(assignee)) validationErrors.push('assignee cannot be empty.');
+    if (isEmpty(reporter)) validationErrors.push('reporter cannot be empty.');
+
+    if (validationErrors.length > 0) {
+        return res.status(400).json({
+            "From": "ticketApi",
+            "Method": "PUT",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": validationErrors.join(' ')
+        });
+    }
 
     // Finding the user by ID, to update on the same object
     let ticketIndex = tickets.findIndex(ticket => ticket.ticketId === ticketId);
@@ -143,19 +226,9 @@ ticketApi.put('/:ticketId', (req, res) => {
         });
     }
 
-    if ([title, description, team, status, assignee, reporter].some(field => field === null || field === '')) {
-        return res.status(400).json({
-            "From": "ticketApi",
-            "Method": "PUT",
-            "Status": "Data Not Updated",
-            "StatusCode": 400,
-            "Message": 'Fields cannot be null or empty.'
-        });
-    }
-
     // Update user data
     tickets[ticketIndex] = {
-        ...tickets[ticketIndex],
+        ticketId,
         title,
         description,
         team,
@@ -164,7 +237,7 @@ ticketApi.put('/:ticketId', (req, res) => {
         reporter
     };
 
-    writeTickets(tickets);
+    writeData(data);
 
     res.status(200).json({
         "From": "ticketApi",
@@ -192,11 +265,70 @@ ticketApi.patch('/:ticketId', (req, res) => {
     }
     ticketId = parseInt(ticketId);
     const { title, description, team, status, assignee, reporter } = req.body;
-    let tickets = readTickets();
+    let data = readData();
+    let tickets = data.tickets;
+
+    // find the user object
+    let ticket = tickets.find(ticket => ticket.ticketId === ticketId);
+    if (ticket === undefined) {
+        return res.status(404).json({
+            "From": "ticketApi",
+            "Method": "PATCH",
+            "Status": "TicketId Not Found",
+            "StatusCode": 404
+        });
+    }
+    
+    // Extract keys from the existing ticket
+    const validFields = Object.keys(ticket);
+
+    // Check for unexpected fields in the request body
+    const unexpectedFields = Object.keys(req.body).filter(field => !validFields.includes(field));
+    if (unexpectedFields.length > 0) {
+        return res.status(400).json({
+            "From": "ticketApi",
+            "Method": "PATCH",
+            "Status": "Data Not Updated",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${unexpectedFields.join(', ')}`
+        });
+    }
+
+    let validationErrors = [];
+
+    // Validate if the fields are empty
+    if (title !== undefined && ((!title) || title.trim() === '')) {
+        validationErrors.push('title cannot be empty.');
+    }
+    if (description !== undefined && ((!description) || description.trim() === '')) {
+        validationErrors.push('description cannot be empty.');
+    }
+    if (team !== undefined && ((!team) || team.trim() === '')) {
+        validationErrors.push('team cannot be empty.');
+    }
+    if (status !== undefined && ((!status) || status.trim() ==='')) {
+        validationErrors.push('status cannot be empty.');
+    }
+    if (assignee !== undefined && ((!assignee) || assignee.trim() === '')) {
+        validationErrors.push('assignee connot be empty.');
+    }
+    if (reporter !== undefined && ((!reporter) || reporter.trim() === '')) {
+        validationErrors.push('reporter cannot be empty.');
+    }
+
+    if (validationErrors.length > 0) {
+        return res.status(400).json({
+            "From": "ticketApi",
+            "Method": "PATCH",
+            "Status": "Data Not Updated",
+            "StatusCode": 400,
+            "Message": validationErrors.join(' ')
+        });
+    }
 
     // Finding the user by ID, to update on the same object
     let ticketIndex = tickets.findIndex(ticket => ticket.ticketId === ticketId);
-
+    
     if (ticketIndex === -1) {
         return res.status(404).json({
             "From": "ticketApi",
@@ -206,37 +338,13 @@ ticketApi.patch('/:ticketId', (req, res) => {
         });
     }
 
-    if (title !== undefined && title !== tickets[ticketIndex].title) {
-        const titleExists = tickets.some(ticket => ticket.title === title && ticket.ticketId !== ticketId);
-
-        if (titleExists) {
-            return res.status(400).json({
-                "From": "ticketApi",
-                "Method": "PATCH",
-                "Status": "Data Not Updated",
-                "StatusCode": 400,
-                "Message": 'Title already exists.'
-            });
-        }
-    }
-
-    if ([title, description, team, status, assignee, reporter].some(field => field !== undefined && (field === null || field === ''))) {
-        return res.status(400).json({
-            "From": "ticketApi",
-            "Method": "PATCH",
-            "Status": "Data Not Updated",
-            "StatusCode": 400,
-            "Message": 'Fields cannot be null or empty if provided.'
-        });
-    }
-
     // Update user data partially
     tickets[ticketIndex] = {
         ...tickets[ticketIndex],
         ...req.body
     };
 
-    writeTickets(tickets);
+    writeData(data);
 
     res.status(200).json({
         "From": "ticketApi",
@@ -264,7 +372,18 @@ ticketApi.delete('/:ticketId', (req, res) => {
     }
 
     ticketId = parseInt(ticketId);
-    let tickets = readTickets();
+    let data = readData();
+    let tickets = data.tickets;
+
+    let ticket = tickets.find(ticket => ticket.ticketId === ticketId);
+    if (ticket === undefined) {
+        return res.status(404).json({
+            "From": "ticketApi",
+            "Method": "DELETE",
+            "Status": "TicketId Not Found",
+            "StatusCode": 404
+        });
+    }
 
     // Finding the user by ID
     let ticketIndex = tickets.findIndex(ticket => ticket.ticketId === ticketId);
@@ -281,7 +400,7 @@ ticketApi.delete('/:ticketId', (req, res) => {
     // Remove the user using index value
     tickets.splice(ticketIndex, 1);
 
-    writeTickets(tickets);
+    writeData(data);
 
     res.status(200).json({
         "From": "ticketApi",

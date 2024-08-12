@@ -1,41 +1,88 @@
-[
-  {
-    "id": 1,
-    "title": "Application",
-    "description": "can't able to install application",
-    "team": "Developer",
-    "status": "Pending",
-    "assignee": "Vinoth",
-    "reporter": "Bharath"
-  },
-  {
-    "id": 2,
-    "firstName": "Bharath",
-    "lastName": "S",
-    "emailId": "Bharath.Sevarkodiyon@gwcdata.ai",
-    "phoneNumber": "9080233170",
-    "employeeId": "0291706",
-    "designation": "Associate Full Stack Developer",
-    "teamId": "11213"
-  },
-  {
-    "id": 3,
-    "firstName": "Bharath",
-    "lastName": "S",
-    "emailId": "Bharath.Sevarkodiyon@gwcdata",
-    "phoneNumber": "9080233",
-    "employeeId": "02917068",
-    "designation": "Associate Full Stack Developer",
-    "teamId": "11213"
-  },
-  {
-    "id": 4,
-    "firstName": "Bharath12",
-    "lastName": "123",
-    "emailId": "Bharath@gwcdataa.i",
-    "phoneNumber": "1234567891",
-    "employeeId": "22917067",
-    "designation": "Associate Full Stack Developer",
-    "teamId": "112342"
-  }
-]
+{
+  "teams": [
+    {
+      "teamId": 1,
+      "teamName": "Dev",
+      "members": [
+        "Bharath",
+        "Santhosh",
+        "Ravi"
+      ]
+    },
+    {
+      "teamId": 2,
+      "teamName": "Devops",
+      "members": [
+        "sunil",
+        "venkat"
+      ]
+    },
+    {
+      "teamId": 4,
+      "teamName": "test",
+      "members": [
+        "harish",
+        "rahul"
+      ]
+    },
+    {
+      "teamId": 5,
+      "teamName": "testing",
+      "members": [
+        "harish",
+        "rahul"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "userId": 1,
+      "firstName": "Bharath",
+      "lastName": "S",
+      "emailId": "Sevarkodiyon@gwcdata.ai",
+      "phoneNumber": "9080233170",
+      "employeeId": "0291706",
+      "designation": "Associate Full Stack Developer",
+      "teamId": "11213"
+    },
+    {
+      "userId": 2,
+      "firstName": "Bharath",
+      "lastName": "S",
+      "emailId": "Bhar.Sevarkodiyon@gwcdata.ai",
+      "phoneNumber": "9080233130",
+      "employeeId": "0291705",
+      "designation": "Associate Full Stack Developer",
+      "teamId": "11213"
+    }
+  ],
+  "tickets": [
+    {
+      "ticketId": 1,
+      "title": "software",
+      "description": "can't able to install application",
+      "team": "Developer",
+      "status": "completed",
+      "assignee": "Vinoth",
+      "reporter": "Bharath"
+    },
+    {
+      "ticketId": 2,
+      "title": "hardware",
+      "description": "can't able to install application",
+      "team": "Developer",
+      "status": "completed",
+      "assignee": "Vinoth",
+      "reporter": "Bharath"
+    },
+    {
+      "ticketId": 3,
+      "title": "test",
+      "description": "can't able to install application",
+      "team": "Developer",
+      "status": "completed",
+      "assignee": "Vinoth",
+      "reporter": "Bharath"
+    }
+  ]
+}

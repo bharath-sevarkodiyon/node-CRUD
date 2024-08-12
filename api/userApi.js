@@ -3,26 +3,27 @@ const fs = require('node:fs')
 // const path = require('path')
 const userApi = express.Router();
 
-const userFileName = 'data.json';
+const dataFileName = 'data.json';
 
 // Read function
-const readUsers = () => {
-    if (!fs.existsSync(userFileName)) {
-        return [];
+const readData = () => {
+    if (!fs.existsSync(dataFileName)) {
+        return { teams: [], users: [], tickets: [] };
     }
-    const data = fs.readFileSync(userFileName, { encoding: 'utf-8' });
+    const data = fs.readFileSync(dataFileName, { encoding: 'utf-8' });
     return JSON.parse(data);
 };
 
 // Write function
-const writeUsers = (users) => {
-    fs.writeFileSync(userFileName, JSON.stringify(users, null, 2), { encoding: 'utf-8' });
+const writeData = (data) => {
+    fs.writeFileSync(dataFileName, JSON.stringify(data, null, 2), { encoding: 'utf-8' });
 };
 
 
 // GET
-userApi.get('/', (req, res) => {
-    let users = readUsers();
+userApi.get('/', (req, res) => {    
+    let data = readData();
+    let users = data.users;
 
     if (users.length === 0) {
         return res.status(404).json({ "From": "userApi", "Method": "GET", "Status": "No Data Present", "StatusCode": 404  });
@@ -48,8 +49,21 @@ userApi.post('/', (req, res) => {
         });
     }
 
+    // Check for unexpected fields
+    const extraFields = Object.keys(req.body).filter(field => !requiredFields.includes(field));
+    if (extraFields.length > 0) {
+        return res.status(400).json({
+            "From": "ticketApi",
+            "Method": "POST",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${extraFields.join(', ')}`
+        });
+    }
+
     const { firstName, lastName, emailId, phoneNumber, employeeId, designation, teamId } = req.body;
-    let users = readUsers();
+    let data = readData();
+    let users = data.users;
     
     const isEmpty = (field) => !field || typeof field !== 'string' || field.trim() === '';
     const emailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
@@ -77,32 +91,12 @@ userApi.post('/', (req, res) => {
         });
     }
 
-    // Validate email, phone number and EmployeeID
-    const emailExists = users.some(user => user.emailId === emailId);
-    const phoneExists = users.some(user => user.phoneNumber === phoneNumber);
-    const employeeIdExists = users.some(user => user.employeeId === employeeId);
-
-    if (emailExists || phoneExists || employeeIdExists) {
-        let message = '';
-        if (emailExists) message += 'Email already exists. ';
-        if (phoneExists) message += 'Phone number already exists. ';
-        if (employeeIdExists) message += 'Employee ID already exists.';
-
-        return res.status(400).json({
-            "From": "userApi",
-            "Method": "POST",
-            "Status": "Data Not Created",
-            "StatusCode": 400,
-            "Message": message
-        });
-    }
-
     // unique ID creation
-    const uniqueId = users.length ? Math.max(...users.map(user => user.id)) + 1 : 1;
+    const userId = users.length ? Math.max(...users.map(user => user.userId)) + 1 : 1;
 
     // Create new user object
     const newUser = {
-        id: uniqueId,
+        userId,
         firstName,
         lastName,
         emailId,
@@ -114,7 +108,7 @@ userApi.post('/', (req, res) => {
 
     // updating the user with new data
     users.push(newUser);
-    writeUsers(users);
+    writeData(data);
 
     res.status(201).json({ "From": "userApi", "Method": "POST", "Status": "Data Created", "StatusCode": 201, "Received Data": newUser });
 });
@@ -135,9 +129,45 @@ userApi.put('/:userId', (req, res) => {
         });
     }
 
+    const requiredFields = ['firstName', 'lastName', 'emailId', 'phoneNumber', 'employeeId', 'designation', 'teamId'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+
+    if (missingFields.length > 0) {
+        return res.status(400).json({
+            "From": "userApi",
+            "Method": "PUT",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Missing fields: ${missingFields.join(', ')}`
+        });
+    }
+
+    // Check for unexpected fields
+    const extraFields = Object.keys(req.body).filter(field => !requiredFields.includes(field));
+    if (extraFields.length > 0) {
+        return res.status(400).json({
+            "From": "userApi",
+            "Method": "PUT",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${extraFields.join(', ')}`
+        });
+    }
+
     userId = parseInt(userId);
     const { firstName, lastName, emailId, phoneNumber, employeeId, designation, teamId } = req.body;
-    let users = readUsers();
+    let data = readData();
+    let users = data.users;
+
+    let user = users.find(user => user.userId === userId);
+    if (user === undefined) {
+        return res.status(404).json({
+            "From": "userApi",
+            "Method": "PUT",
+            "Status": "UserId Not Found",
+            "StatusCode": 404
+        });
+    }
 
     const isEmpty = (field) => !field || typeof field !== 'string' || field.trim() === '';
 
@@ -166,7 +196,7 @@ userApi.put('/:userId', (req, res) => {
     }
 
     // Finding the user by ID, to update on the same object
-    let userIndex = users.findIndex(user => user.id === userId);
+    let userIndex = users.findIndex(user => user.userId === userId);
 
     if (userIndex === -1) {
         return res.status(404).json({
@@ -177,29 +207,9 @@ userApi.put('/:userId', (req, res) => {
         });
     }
 
-    // // Check for unique email, phone number, and employee ID among other users
-    const emailExists = users.some(user => user.emailId === emailId);
-    const phoneExists = users.some(user => user.phoneNumber === phoneNumber);
-    const employeeIdExists = users.some(user => user.employeeId === employeeId);
-
-    if (emailExists || phoneExists || employeeIdExists) {
-        let message = '';
-        if (emailExists) message += 'Email already exists. ';
-        if (phoneExists) message += 'Phone number already exists. ';
-        if (employeeIdExists) message += 'Employee ID already exists.';
-
-        return res.status(400).json({
-            "From": "userApi",
-            "Method": "PUT",
-            "Status": "Data Not Updated",
-            "StatusCode": 400,
-            "Message": message.trim()
-        });
-    }
-
     // Update user data
     users[userIndex] = {
-        ...users[userIndex],
+        userId,
         firstName,
         lastName,
         emailId,
@@ -209,7 +219,7 @@ userApi.put('/:userId', (req, res) => {
         teamId
     };
 
-    writeUsers(users);
+    writeData(data);
 
     res.status(200).json({
         "From": "userApi",
@@ -232,13 +242,40 @@ userApi.patch('/:userId', (req, res) => {
             "Method": "PATCH",
             "Status": "Data Not Updated",
             "StatusCode": 400,
-            "Message": "Enter a valid numeric userId"
+            "Message": "Enter a valid userId"
         });
     }
 
     userId = parseInt(userId);
     const { firstName, lastName, emailId, phoneNumber, employeeId, designation, teamId } = req.body;
-    let users = readUsers();
+    let data = readData();
+    let users = data.users;
+
+    // find the user object
+    let user = users.find(user => user.userId === userId);
+    if (user === undefined) {
+        return res.status(404).json({
+            "From": "userApi",
+            "Method": "PATCH",
+            "Status": "UserId Not Found",
+            "StatusCode": 404
+        });
+    }
+
+    // Extract keys from the existing ticket
+    const validFields = Object.keys(user);
+
+    // Check for unexpected fields in the request body
+    const unexpectedFields = Object.keys(req.body).filter(field => !validFields.includes(field));
+    if (unexpectedFields.length > 0) {
+        return res.status(400).json({
+            "From": "userApi",
+            "Method": "PATCH",
+            "Status": "Data Not Updated",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${unexpectedFields.join(', ')}`
+        });
+    }
 
     // Check unique email, phone number and EmployeeID along with check for null entries and email and mobile format validation.
     const emailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -246,10 +283,10 @@ userApi.patch('/:userId', (req, res) => {
     let validationErrors = [];
 
     // Validate only if the fields
-    if (firstName !== undefined && (!firstName)) {
+    if (firstName !== undefined && ((!firstName) || firstName.trim() === '')) {
         validationErrors.push('First name cannot be empty.');
     }
-    if (lastName !== undefined && (!lastName)) {
+    if (lastName !== undefined && ((!lastName) || lastName.trim() === '')) {
         validationErrors.push('Last name cannot be empty.');
     }
     if (emailId !== undefined) {
@@ -273,10 +310,10 @@ userApi.patch('/:userId', (req, res) => {
             validationErrors.push('Employee ID already exists.');
         }
     }
-    if (designation !== undefined && (!designation)) {
+    if (designation !== undefined && ((!designation) || designation.trim() === '')) {
         validationErrors.push('Designation cannot be empty.');
     }
-    if (teamId !== undefined && (isNaN(teamId) || teamId === null || teamId === '')) {
+    if (teamId !== undefined && (isNaN(teamId) || teamId === null || teamId.trim() === '')) {
         validationErrors.push('Team ID cannot be empty.');
     }
 
@@ -291,7 +328,7 @@ userApi.patch('/:userId', (req, res) => {
     }
 
     // Finding the user by ID, to update on the same object
-    let userIndex = users.findIndex(user => user.id === userId);
+    let userIndex = users.findIndex(user => user.userId === userId);
 
     if (userIndex === -1) {
         return res.status(404).json({
@@ -308,7 +345,7 @@ userApi.patch('/:userId', (req, res) => {
         ...req.body
     };
 
-    writeUsers(users);
+    writeData(data);
 
     res.status(200).json({
         "From": "userApi",
@@ -336,10 +373,21 @@ userApi.delete('/:userId', (req, res) => {
     }
 
     userId = parseInt(userId);
-    let users = readUsers();
+    let data = readData();
+    let users = data.users;
+
+    let user = users.find(user => user.userId === userId);
+    if (user === undefined) {
+        return res.status(404).json({
+            "From": "userApi",
+            "Method": "DELETE",
+            "Status": "UserId Not Found",
+            "StatusCode": 404
+        });
+    }
 
     // Finding the user by ID
-    let userIndex = users.findIndex(user => user.id === userId);
+    let userIndex = users.findIndex(user => user.userId === userId);
 
     if (userIndex === -1) {
         return res.status(404).json({
@@ -352,8 +400,7 @@ userApi.delete('/:userId', (req, res) => {
 
     // Remove the user using index value
     users.splice(userIndex, 1);
-
-    writeUsers(users);
+    writeData(data);
 
     res.status(200).json({
         "From": "userApi",

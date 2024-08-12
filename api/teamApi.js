@@ -3,26 +3,26 @@ const fs = require('node:fs')
 
 const teamApi = express.Router();
 
-
-const teamFileName = 'team.json';
+const dataFileName = 'data.json';
 
 // Read function
-const readTeams = () => {
-    if (!fs.existsSync(teamFileName)) {
-        return [];
+const readData = () => {
+    if (!fs.existsSync(dataFileName)) {
+        return { teams: [], users: [], tickets: [] };
     }
-    const data = fs.readFileSync(teamFileName, { encoding: 'utf-8' });
+    const data = fs.readFileSync(dataFileName, { encoding: 'utf-8' });
     return JSON.parse(data);
 };
 
 // Write function
-const writeTeams = (teams) => {
-    fs.writeFileSync(teamFileName, JSON.stringify(teams, null, 2), { encoding: 'utf-8' });
+const writeData = (data) => {
+    fs.writeFileSync(dataFileName, JSON.stringify(data, null, 2), { encoding: 'utf-8' });
 };
 
 // GET
 teamApi.get('/', (req, res) => {
-    let teams = readTeams();
+    let data = readData();
+    let teams = data.teams;
 
     if (teams.length === 0) {
         return res.status(404).json({
@@ -42,6 +42,7 @@ teamApi.get('/', (req, res) => {
     });
 });
 
+
 // POST
 teamApi.post('/', (req, res) => {
     const requiredFields = ['teamName', 'members'];
@@ -57,8 +58,21 @@ teamApi.post('/', (req, res) => {
         });
     }
 
+    // Check for unexpected fields
+    const extraFields = Object.keys(req.body).filter(field => !requiredFields.includes(field));
+    if (extraFields.length > 0) {
+        return res.status(400).json({
+            "From": "teamApi",
+            "Method": "POST",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${extraFields.join(', ')}`
+        });
+    }
+
     const { teamName, members } = req.body;
-    let teams = readTeams();
+    let data = readData();
+    let teams = data.teams;
 
     // Validate teamName and members to be unique
     const teamNameExists = teams.some(team => team.teamName === teamName);
@@ -73,29 +87,29 @@ teamApi.post('/', (req, res) => {
         });
     }
 
-    const existingMembers = new Set();
-    teams.forEach(team => {
-        team.members.forEach(member => existingMembers.add(member.toLowerCase()));
-    });
+    // const existingMembers = new Set();
+    // teams.forEach(team => {
+    //     team.members.forEach(member => existingMembers.add(member.toLowerCase()));
+    // });
 
-    const newMembers = new Set(members.map(member => member.toLowerCase()));
-    const duplicateMembers = [...newMembers].filter(member => existingMembers.has(member));
+    // const newMembers = new Set(members.map(member => member.toLowerCase()));
+    // const duplicateMembers = [...newMembers].filter(member => existingMembers.has(member));
 
-    if (duplicateMembers.length > 0) {
+    // if (duplicateMembers.length > 0) {
+    //     return res.status(400).json({
+    //         "From": "teamApi",
+    //         "Method": "POST",
+    //         "Status": "Data Not Created",
+    //         "StatusCode": 400,
+    //         "Message": `Members is already exist in another team: ${duplicateMembers.join(', ')}`
+    //     });
+    // }
+
+    // Validate teamName is not empty
+    if (teamName !== undefined && ((!teamName) || teamName.trim() === '')) {
         return res.status(400).json({
             "From": "teamApi",
             "Method": "POST",
-            "Status": "Data Not Created",
-            "StatusCode": 400,
-            "Message": `Members is already exist in another team: ${duplicateMembers.join(', ')}`
-        });
-    }
-
-    // Validate teamName is not empty
-    if (!teamName || typeof teamName !== 'string' || teamName.trim() === '') {
-        return res.status(400).json({
-            "From": "teamApi",
-            "Method": "PUT",
             "Status": "Data Not Updated",
             "StatusCode": 400,
             "Message": 'Team name cannot be empty.'
@@ -103,10 +117,10 @@ teamApi.post('/', (req, res) => {
     }
 
     // Validate members is not empty
-    if (!Array.isArray(members) || members.length === 0) {
+    if (members !== undefined && (!Array.isArray(members) || members.length === 0)) {
         return res.status(400).json({
             "From": "teamApi",
-            "Method": "PUT",
+            "Method": "POST",
             "Status": "Data Not Updated",
             "StatusCode": 400,
             "Message": 'Members cannot be empty.'
@@ -125,7 +139,7 @@ teamApi.post('/', (req, res) => {
 
     // Add the new team to the array and write to the file
     teams.push(newTeam);
-    writeTeams(teams);
+    writeData(data);
 
     res.status(201).json({
         "From": "teamApi",
@@ -152,9 +166,45 @@ teamApi.put('/:teamId', (req, res) => {
         });
     }
 
+    const requiredFields = ['teamName', 'members'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+
+    if (missingFields.length > 0) {
+        return res.status(400).json({
+            "From": "teamApi",
+            "Method": "PUT",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Missing fields: ${missingFields.join(', ')}`
+        });
+    }
+
+    // Check for unexpected fields
+    const extraFields = Object.keys(req.body).filter(field => !requiredFields.includes(field));
+    if (extraFields.length > 0) {
+        return res.status(400).json({
+            "From": "teamApi",
+            "Method": "PUT",
+            "Status": "Data Not Created",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${extraFields.join(', ')}`
+        });
+    }
+
     teamId = parseInt(teamId);
     const { teamName, members } = req.body;
-    let teams = readTeams();
+    let data = readData();
+    let teams = data.teams;
+
+    let team = teams.find(team => team.teamId === teamId);
+    if (team === undefined) {
+        return res.status(404).json({
+            "From": "teamApi",
+            "Method": "PUT",
+            "Status": "TeamId Not Found",
+            "StatusCode": 404
+        });
+    }
 
     // Find the team by ID
     let teamIndex = teams.findIndex(team => team.teamId === teamId);
@@ -169,28 +219,28 @@ teamApi.put('/:teamId', (req, res) => {
     }
 
     // Validate members to be unique
-    const existingMembers = new Set();
-    teams.forEach(team => {
-        if (team.teamId !== teamId) { 
-            team.members.forEach(member => existingMembers.add(member.toLowerCase()));
-        }
-    });
+    // const existingMembers = new Set();
+    // teams.forEach(team => {
+    //     if (team.teamId !== teamId) { 
+    //         team.members.forEach(member => existingMembers.add(member.toLowerCase()));
+    //     }
+    // });
 
-    const newMembers = new Set(members.map(member => member.toLowerCase()));
-    const duplicateMembers = [...newMembers].filter(member => existingMembers.has(member));
+    // const newMembers = new Set(members.map(member => member.toLowerCase()));
+    // const duplicateMembers = [...newMembers].filter(member => existingMembers.has(member));
 
-    if (duplicateMembers.length > 0) {
-        return res.status(400).json({
-            "From": "teamApi",
-            "Method": "PUT",
-            "Status": "Data Not Updated",
-            "StatusCode": 400,
-            "Message": `Members already exist in another team: ${duplicateMembers.join(', ')}`
-        });
-    }
+    // if (duplicateMembers.length > 0) {
+    //     return res.status(400).json({
+    //         "From": "teamApi",
+    //         "Method": "PUT",
+    //         "Status": "Data Not Updated",
+    //         "StatusCode": 400,
+    //         "Message": `Members already exist in another team: ${duplicateMembers.join(', ')}`
+    //     });
+    // }
 
     // Validate teamName is not empty
-    if (!teamName || typeof teamName !== 'string' || teamName.trim() === '') {
+    if (teamName !== undefined && ((!teamName) || teamName.trim() === '')) {
         return res.status(400).json({
             "From": "teamApi",
             "Method": "PUT",
@@ -201,7 +251,7 @@ teamApi.put('/:teamId', (req, res) => {
     }
 
     // Validate members is not empty
-    if (!Array.isArray(members) || members.length === 0) {
+    if (members !== undefined && (!Array.isArray(members) || members.length === 0)) {
         return res.status(400).json({
             "From": "teamApi",
             "Method": "PUT",
@@ -218,7 +268,7 @@ teamApi.put('/:teamId', (req, res) => {
         members
     };
 
-    writeTeams(teams);
+    writeData(data);
 
     res.status(200).json({
         "From": "teamApi",
@@ -246,7 +296,77 @@ teamApi.patch('/:teamId', (req, res) => {
     }
     teamId = parseInt(teamId);
     const { teamName, members } = req.body;
-    let teams = readTeams();
+    let data = readData();
+    let teams = data.teams;
+
+    // find the team object
+    let team = teams.find(team => team.teamId === teamId);
+    if (team === undefined) {
+        return res.status(404).json({
+            "From": "teamApi",
+            "Method": "PATCH",
+            "Status": "TicketId Not Found",
+            "StatusCode": 404
+        });
+    }
+
+    // Extract keys from the existing team
+    const validFields = Object.keys(team);
+
+    // Check for unexpected fields in the request body
+    const unexpectedFields = Object.keys(req.body).filter(field => !validFields.includes(field));
+    if (unexpectedFields.length > 0) {
+        return res.status(400).json({
+            "From": "teamApi",
+            "Method": "PATCH",
+            "Status": "Data Not Updated",
+            "StatusCode": 400,
+            "Message": `Unexpected fields: ${unexpectedFields.join(', ')}`
+        });
+    }
+
+    // Validate members to be unique
+    // const existingMembers = new Set();
+    // teams.forEach(team => {
+    //     if (team.teamId !== teamId) { 
+    //         team.members.forEach(member => existingMembers.add(member.toLowerCase()));
+    //     }
+    // });
+
+    // const newMembers = new Set(members.map(member => member.toLowerCase())); // Normalize new members to lowercase
+    // const duplicateMembers = [...newMembers].filter(member => existingMembers.has(member));
+
+    // if (duplicateMembers.length > 0) {
+    //     return res.status(400).json({
+    //         "From": "teamApi",
+    //         "Method": "PUT",
+    //         "Status": "Data Not Updated",
+    //         "StatusCode": 400,
+    //         "Message": `Members already exist in another team: ${duplicateMembers.join(', ')}`
+    //     });
+    // }
+
+    // Validate teamName is not empty
+    if (teamName !== undefined && ((!teamName) || teamName.trim() === '')) {
+        return res.status(400).json({
+            "From": "teamApi",
+            "Method": "PATCH",
+            "Status": "Data Not Updated",
+            "StatusCode": 400,
+            "Message": 'Team name cannot be empty.'
+        });
+    }
+
+    // Validate members is not empty
+    if (members !== undefined && (!Array.isArray(members) || members.length === 0)) {
+        return res.status(400).json({
+            "From": "teamApi",
+            "Method": "PATCH",
+            "Status": "Data Not Updated",
+            "StatusCode": 400,
+            "Message": 'Members cannot be empty.'
+        });
+    }
 
     // Find the team by ID
     let teamIndex = teams.findIndex(team => team.teamId === teamId);
@@ -260,57 +380,13 @@ teamApi.patch('/:teamId', (req, res) => {
         });
     }
 
-    // Validate members to be unique
-    const existingMembers = new Set();
-    teams.forEach(team => {
-        if (team.teamId !== teamId) { 
-            team.members.forEach(member => existingMembers.add(member.toLowerCase()));
-        }
-    });
-
-    const newMembers = new Set(members.map(member => member.toLowerCase())); // Normalize new members to lowercase
-    const duplicateMembers = [...newMembers].filter(member => existingMembers.has(member));
-
-    if (duplicateMembers.length > 0) {
-        return res.status(400).json({
-            "From": "teamApi",
-            "Method": "PUT",
-            "Status": "Data Not Updated",
-            "StatusCode": 400,
-            "Message": `Members already exist in another team: ${duplicateMembers.join(', ')}`
-        });
-    }
-
-    // Validate teamName is not empty
-    if (!teamName || typeof teamName !== 'string' || teamName.trim() === '') {
-        return res.status(400).json({
-            "From": "teamApi",
-            "Method": "PUT",
-            "Status": "Data Not Updated",
-            "StatusCode": 400,
-            "Message": 'Team name cannot be empty.'
-        });
-    }
-
-    // Validate members is not empty
-    if (!Array.isArray(members) || members.length === 0) {
-        return res.status(400).json({
-            "From": "teamApi",
-            "Method": "PUT",
-            "Status": "Data Not Updated",
-            "StatusCode": 400,
-            "Message": 'Members cannot be empty.'
-        });
-    }
-
     // Update team data partially
     teams[teamIndex] = {
         ...teams[teamIndex],
-        teamName,
-        members
+        ...req.body
     };
 
-    writeTeams(teams);
+    writeData(data);
 
     res.status(200).json({
         "From": "teamApi",
@@ -320,7 +396,6 @@ teamApi.patch('/:teamId', (req, res) => {
         "Updated Data": teams[teamIndex]
     });
 });
-
 
 
 // DELETE
@@ -339,7 +414,18 @@ teamApi.delete('/:teamId', (req, res) => {
     }
 
     teamId = parseInt(teamId);
-    let teams = readTeams();
+    let data = readData();
+    let teams = data.teams;
+
+    let team = teams.find(team => team.teamId === teamId);
+    if (team === undefined) {
+        return res.status(404).json({
+            "From": "teamApi",
+            "Method": "DELETE",
+            "Status": "TeamId Not Found",
+            "StatusCode": 404
+        });
+    }
 
     // Find the team by ID
     let teamIndex = teams.findIndex(team => team.teamId === teamId);
@@ -356,7 +442,7 @@ teamApi.delete('/:teamId', (req, res) => {
     // Remove the team using index value
     teams.splice(teamIndex, 1);
 
-    writeTeams(teams);
+    writeData(data);
 
     res.status(200).json({
         "From": "teamApi",
