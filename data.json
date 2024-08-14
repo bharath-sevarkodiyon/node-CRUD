@@ -60,27 +60,54 @@
     {
       "ticketId": 1,
       "title": "software",
-      "description": "can't able to install application",
-      "team": "Developer",
-      "status": "completed",
+      "description": "couldn't able to install software in laptop",
+      "team": "IT Team",
+      "status": "Open",
       "assignee": "Vinoth",
       "reporter": "Bharath"
     },
     {
       "ticketId": 2,
       "title": "hardware",
-      "description": "can't able to install application",
-      "team": "Developer",
-      "status": "completed",
+      "description": "hardware problem occured in laptop",
+      "team": "IT Team",
+      "status": "inprogress",
       "assignee": "Vinoth",
       "reporter": "Bharath"
     },
     {
       "ticketId": 3,
+      "title": "Laptop request",
+      "description": "laptop not yet received",
+      "team": "HR",
+      "status": "Closed",
+      "assignee": "Vinoth",
+      "reporter": "Bharath"
+    },
+    {
+      "ticketId": 4,
+      "title": "Timesheet",
+      "description": "couldn't able to update timesheet on portal",
+      "team": "IT Team",
+      "status": "inprogress",
+      "assignee": "Vinoth",
+      "reporter": "Bharath"
+    },
+    {
+      "ticketId": 5,
+      "title": "Leave Request",
+      "description": "I couldn't able to apply leave on portal",
+      "team": "HR",
+      "status": "open",
+      "assignee": "Vinoth",
+      "reporter": "Bharath"
+    },
+    {
+      "ticketId": 6,
       "title": "test",
-      "description": "can't able to install application",
-      "team": "Developer",
-      "status": "completed",
+      "description": "I couldn't able to apply leave on portal",
+      "team": "HR",
+      "status": "open",
       "assignee": "Vinoth",
       "reporter": "Bharath"
     }

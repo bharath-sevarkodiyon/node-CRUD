@@ -39,7 +39,7 @@ ticketApi.get('/', (req, res) => {
         "Method": "GET",
         "Status": "Data Received",
         "StatusCode": 200,
-        "Received Data": tickets
+        "ReceivedData": tickets
     });
 });
 

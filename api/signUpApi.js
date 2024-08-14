@@ -18,7 +18,9 @@ const writeData = (data)=>{
 
 
 signUp.post('/', (req, res)=>{
-    const {emailId, password} = req.body
+    const emailId = req.body.emailId.toLowerCase();
+    const password = req.body.password;
+    
     // to find the user file length to create a unique id
     let users = readData();
 

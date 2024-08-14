@@ -18,7 +18,9 @@ const readData = ()=>{
 // }
 
 loginApi.post('/', (req, res)=>{
-    const {emailId, password} = req.body;
+    const emailId = req.body.emailId.toLowerCase();
+    const password = req.body.password;
+    
     let users = readData();
     // console.log("Users",users);
     // console.log("emailId",emailId);
