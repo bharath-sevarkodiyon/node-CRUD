@@ -132,7 +132,7 @@ ticketApi.post('/', (req, res) => {
         "Method": "POST",
         "Status": "Data Created",
         "StatusCode": 201,
-        "Received Data": newTicket
+        "ReceivedData": newTicket
     });
 });
 
@@ -351,7 +351,7 @@ ticketApi.patch('/:ticketId', (req, res) => {
         "Method": "PATCH",
         "Status": "Data Updated",
         "StatusCode": 200,
-        "Updated Data": tickets[ticketIndex]
+        "UpdatedData": tickets[ticketIndex]
     });
 });
 

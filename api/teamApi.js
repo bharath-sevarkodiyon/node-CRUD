@@ -38,7 +38,7 @@ teamApi.get('/', (req, res) => {
         "Method": "GET",
         "Status": "Data Received",
         "StatusCode": 200,
-        "Received Data": teams
+        "ReceivedData": teams
     });
 });
 
@@ -146,7 +146,7 @@ teamApi.post('/', (req, res) => {
         "Method": "POST",
         "Status": "Data Created",
         "StatusCode": 201,
-        "Received Data": newTeam
+        "ReceivedData": newTeam
     });
 });
 
@@ -393,7 +393,7 @@ teamApi.patch('/:teamId', (req, res) => {
         "Method": "PATCH",
         "Status": "Data Updated",
         "StatusCode": 200,
-        "Updated Data": teams[teamIndex]
+        "UpdatedData": teams[teamIndex]
     });
 });
 
@@ -449,7 +449,7 @@ teamApi.delete('/:teamId', (req, res) => {
         "Method": "DELETE",
         "Status": "Data Deleted",
         "StatusCode": 200,
-        "Deleted TeamId": teamId
+        "DeletedTeamId": teamId
     });
 });
 

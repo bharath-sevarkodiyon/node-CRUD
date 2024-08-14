@@ -5,8 +5,7 @@
       "teamName": "Dev",
       "members": [
         "Bharath",
-        "Santhosh",
-        "Ravi"
+        "Santhosh"
       ]
     },
     {
@@ -18,19 +17,18 @@
       ]
     },
     {
-      "teamId": 4,
-      "teamName": "test",
+      "teamId": 6,
+      "teamName": "HR",
       "members": [
-        "harish",
-        "rahul"
+        "Nandhini",
+        "Abinaya"
       ]
     },
     {
-      "teamId": 5,
-      "teamName": "testing",
+      "teamId": 7,
+      "teamName": "IT Support",
       "members": [
-        "harish",
-        "rahul"
+        "Pavitharan"
       ]
     }
   ],
@@ -104,12 +102,12 @@
     },
     {
       "ticketId": 6,
-      "title": "test",
-      "description": "I couldn't able to apply leave on portal",
+      "title": "Vacation Request",
+      "description": "I couldn't able to apply long leave on portal",
       "team": "HR",
       "status": "open",
       "assignee": "Vinoth",
-      "reporter": "Bharath"
+      "reporter": "Santhosh"
     }
   ]
 }
